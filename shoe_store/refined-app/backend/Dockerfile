@@ -1,20 +1,20 @@
-# 1. เลือก Base Image เป็น Node.js เวอร์ชั่น 18
-FROM node:18-alpine
+# ใช้ Node.js version ล่าสุด (LTS)
+FROM node:20-alpine
 
-# 2. กำหนดโฟลเดอร์ทำงานภายใน Container
+# สร้างโฟลเดอร์สำหรับเก็บแอปในกล่อง
 WORKDIR /app
 
-# 3. คัดลอกไฟล์ package.json มาก่อน เพื่อติดตั้ง dependencies
+# คัดลอก package.json และ package-lock.json เพื่อติดตั้ง library
 COPY package*.json ./
 
-# 4. รันคำสั่งติดตั้งแพ็กเกจที่จำเป็น (เช่น express, cors)
-RUN npm install
+# ติดตั้ง dependencies (ไลบรารีต่างๆ ที่แอปต้องใช้)
+RUN npm install --production
 
-# 5. คัดลอกไฟล์โค้ดทั้งหมด (เช่น server.js) เข้าไปใน Container
+# คัดลอกโค้ดหลังบ้านทั้งหมด (server.js และอื่นๆ) เข้าไป
 COPY . .
 
-# 6. เปิดพอร์ต 3000 สำหรับให้ Frontend เรียกใช้งาน API
+# เปิด port 3000 (หรือ port ที่คุณตั้งไว้ใน server.js)
 EXPOSE 3000
 
-# 7. คำสั่งเริ่มต้นเพื่อรันเซิร์ฟเวอร์
-CMD ["npm", "start"]
+# สั่งรันแอปหลังบ้าน
+CMD ["node", "server.js"]

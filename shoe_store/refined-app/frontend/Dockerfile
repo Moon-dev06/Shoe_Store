@@ -1,11 +1,14 @@
-# 1. เลือก Base Image เป็น Nginx (Web Server ขนาดเล็กและเร็ว)
+# ใช้ Nginx Alpine เพราะมีขนาดเล็กและปลอดภัย
 FROM nginx:alpine
 
-# 2. คัดลอกไฟล์ index.html ของเรา ไปไว้ในโฟลเดอร์ที่ Nginx ใช้แสดงผลเว็บ
-COPY index.html /usr/share/nginx/html/index.html
+# ลบไฟล์ default ของ nginx ออกก่อน
+RUN rm -rf /usr/share/nginx/html/*
 
-# 3. เปิดพอร์ต 80 เพื่อให้คนภายนอกเข้ามาดูเว็บได้
+# คัดลอกไฟล์หน้าเว็บของคุณทั้งหมด (html, css, js) เข้าไปในกล่อง
+COPY . /usr/share/nginx/html
+
+# เปิด port 80 สำหรับการเรียกใช้งานเว็บ
 EXPOSE 80
 
-# 4. สั่งให้ Nginx ทำงานตลอดเวลา
+# สั่งให้ nginx รัน
 CMD ["nginx", "-g", "daemon off;"]
