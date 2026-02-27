@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 2 # จำนวน Pod เริ่มต้น
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend-container
+        image: your-dockerhub-user/refined-backend:latest # เปลี่ยนเป็นชื่อ Image ของคุณ
+        ports:
+        - containerPort: 3000
+        resources:
+          # ต้องกำหนด resources เพื่อให้ Auto-scale รู้ว่าควรกระจายโหลดตอนไหน
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-service
+spec:
+  selector:
+    app: backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: ClusterIP
+
+---
+# ระบบ Auto-scaling (HPA)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend-deployment
+  minReplicas: 2      # จำนวนน้อยสุด
+  maxReplicas: 10     # จำนวนมากสุดเมื่อมีโหลดเยอะ (Auto-scale)
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70 # สั่งให้เพิ่ม Pod ถ้า CPU ทำงานเกิน 70%
