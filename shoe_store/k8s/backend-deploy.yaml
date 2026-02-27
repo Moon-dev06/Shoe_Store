@@ -1,61 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend-deployment
+  name: refined-backend
 spec:
-  replicas: 2 # จำนวน Pod เริ่มต้น
+  replicas: 2 # สั่งให้รัน 2 ตัวเพื่อความชัวร์ (High Availability)
   selector:
     matchLabels:
-      app: backend
+      app: refined-backend
   template:
     metadata:
       labels:
-        app: backend
+        app: refined-backend
     spec:
       containers:
-      - name: backend-container
-        image: your-dockerhub-user/refined-backend:latest # เปลี่ยนเป็นชื่อ Image ของคุณ
+      - name: backend
+        image: moondev06/refined-backend:latest # ใช้ชื่อ Image ของคุณ
         ports:
         - containerPort: 3000
-        resources:
-          # ต้องกำหนด resources เพื่อให้ Auto-scale รู้ว่าควรกระจายโหลดตอนไหน
-          requests:
-            cpu: "100m"
-            memory: "128Mi"
-          limits:
-            cpu: "250m"
-            memory: "256Mi"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: backend-service
 spec:
+  type: LoadBalancer # เพื่อให้ AWS สร้าง Load Balancer ให้เราตามโจทย์
   selector:
-    app: backend
+    app: refined-backend
   ports:
     - protocol: TCP
       port: 80
       targetPort: 3000
-  type: ClusterIP
-
----
-# ระบบ Auto-scaling (HPA)
-apiVersion: autoscaling/v2
-kind: HorizontalPodAutoscaler
-metadata:
-  name: backend-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: backend-deployment
-  minReplicas: 2      # จำนวนน้อยสุด
-  maxReplicas: 10     # จำนวนมากสุดเมื่อมีโหลดเยอะ (Auto-scale)
-  metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70 # สั่งให้เพิ่ม Pod ถ้า CPU ทำงานเกิน 70%
